@@ -1,12 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { Room, RoomStatus } from './rooms.model';
 import { CreateRoomDto } from './dto/create-room.dto';
+import { GetRoomsFilterDto } from './dto/get-rooms-filter.dto';
 
 @Injectable()
 export class RoomsService {
   private rooms: Room[] = [];
 
   getAllRooms(): Room[] {
+    return this.rooms;
+  }
+
+  getRoomsWithFilters(getRoomsFilterDto: GetRoomsFilterDto): Room[] {
+    const { status, search } = getRoomsFilterDto;
+
+    if (status) {
+      return this.rooms.filter((room) => room.status === status);
+    }
+
+    if (search) {
+      return this.rooms.filter(
+        (room) =>
+          room.name.includes(search) || room.description.includes(search),
+      );
+    }
+
     return this.rooms;
   }
 
@@ -22,5 +40,17 @@ export class RoomsService {
 
     this.rooms.push(newRoom);
     return newRoom;
+  }
+
+  deleteRoom(id: number): Room[] {
+    this.rooms = this.rooms.filter((room) => room.id !== id);
+    return this.rooms;
+  }
+
+  updateRoomStatus(id: number, status: RoomStatus) {
+    const room = this.rooms.find((room) => room.id == id);
+    room.status = status;
+
+    return room;
   }
 }
