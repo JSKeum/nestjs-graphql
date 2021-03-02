@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Room, RoomStatus } from './rooms.model';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { GetRoomsFilterDto } from './dto/get-rooms-filter.dto';
@@ -9,6 +9,16 @@ export class RoomsService {
 
   getAllRooms(): Room[] {
     return this.rooms;
+  }
+
+  getRoomById(id: number): Room {
+    const room = this.rooms.find((room) => room.id === id);
+
+    if (!room) {
+      throw new NotFoundException(`Room id ${id} not found`);
+    }
+
+    return room;
   }
 
   getRoomsWithFilters(getRoomsFilterDto: GetRoomsFilterDto): Room[] {
@@ -48,7 +58,7 @@ export class RoomsService {
   }
 
   updateRoomStatus(id: number, status: RoomStatus) {
-    const room = this.rooms.find((room) => room.id == id);
+    const room = this.getRoomById(id);
     room.status = status;
 
     return room;
