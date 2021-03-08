@@ -4,8 +4,9 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { GetRoomsFilterDto } from './dto/get-rooms-filter.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Room as RoomEntity } from './room.entitiy';
-import { Repository } from 'typeorm';
+import { MongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
+import { CreateRoomInput, GetRoomInput } from './room.input';
 
 @Injectable()
 export class RoomsService {
@@ -73,15 +74,26 @@ export class RoomsService {
 export class RoomServiceForGraphQL {
   constructor(
     @InjectRepository(RoomEntity)
-    private roomRepository: Repository<RoomEntity>,
+    private roomRepository: MongoRepository<RoomEntity>,
   ) {}
 
-  async getRoomById(id: string): Promise<RoomEntity> {
+  async getRoomById(getRoomInput: GetRoomInput): Promise<RoomEntity> {
+    const { id } = getRoomInput;
+
     const _id = new ObjectID(id);
-    return this.roomRepository.findOne({ where: _id });
+
+    const room = await this.roomRepository.findOne({ where: _id });
+
+    if (!room) {
+      throw new NotFoundException(`Room id ${id} not found`);
+    }
+
+    return room;
   }
 
-  async createRoom(name: string, description: string): Promise<RoomEntity> {
+  async createRoom(createRoomInput: CreateRoomInput): Promise<RoomEntity> {
+    const { name, description } = createRoomInput;
+
     const room = this.roomRepository.create({
       name,
       description,
