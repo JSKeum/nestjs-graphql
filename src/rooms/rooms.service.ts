@@ -2,6 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Room, RoomStatus } from './rooms.model';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { GetRoomsFilterDto } from './dto/get-rooms-filter.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Room as RoomEntity } from './room.entitiy';
+import { Repository } from 'typeorm';
+import { ObjectID } from 'mongodb';
 
 @Injectable()
 export class RoomsService {
@@ -62,5 +66,27 @@ export class RoomsService {
     room.status = status;
 
     return room;
+  }
+}
+
+@Injectable()
+export class RoomServiceForGraphQL {
+  constructor(
+    @InjectRepository(RoomEntity)
+    private roomRepository: Repository<RoomEntity>,
+  ) {}
+
+  async getRoomById(id: string): Promise<RoomEntity> {
+    const _id = new ObjectID(id);
+    return this.roomRepository.findOne({ where: _id });
+  }
+
+  async createRoom(name: string, description: string): Promise<RoomEntity> {
+    const room = this.roomRepository.create({
+      name,
+      description,
+    });
+
+    return this.roomRepository.save(room);
   }
 }
